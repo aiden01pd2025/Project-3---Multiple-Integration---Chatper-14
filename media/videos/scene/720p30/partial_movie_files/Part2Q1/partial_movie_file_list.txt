@@ -1,0 +1,13 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/2791336209_548731573_950014569.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_4106838630_2253379192.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_548731573_2586938185.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_3254134616_2501212513.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_548731573_2096886755.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_3904389765_139728474.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_548731573_662769249.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_3647939813_1812311521.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_548731573_1983631526.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_3469961054_503588221.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_548731573_1542382982.mp4'
+file 'file:/Users/aidengu/Desktop/Grade 12/Multivariable Calculus/Project 3 - Multiple Integration - Chatper 14/media/videos/scene/720p30/partial_movie_files/Part2Q1/677646308_1643961793_3058553632.mp4'

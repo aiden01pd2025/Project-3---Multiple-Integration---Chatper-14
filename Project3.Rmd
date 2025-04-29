@@ -1,0 +1,474 @@
+---
+title: "Project 3: Big Ball Tumors"
+author: "Aiden Gu"
+date: "2025-02-26"
+output:
+  html_document:
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+mathjax: default
+header-includes:
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=7, fig.height=4, format = "latex")
+if(!require('pacman')) {
+  install.packages('pacman')
+}
+pacman::p_load(rgl, plotly, gt, ggplot2, gridExtra, grid, dplyr, tidyr, cowplot, katex) 
+```
+
+```{css style settings, echo = FALSE}
+blockquote {
+    padding: 10px 20px;
+    margin: 0 0 20px;
+    line-height: 20px;
+    font-size: 14px;
+    border-left: 5px solid #eee;
+}
+
+.page-break {
+  page-break-before: always;
+  display: block;
+  margin-top: 700px;
+}
+
+.title {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.subtitle, .author, .date {
+  text-align: center;
+}
+```
+
+\
+
+![](./Graphics/cover.webp){#id .class width=720px}
+
+\
+
+# Part 1 - The Many Flavors of Rogue Balls
+
+When it comes to tumors, you might think of them as those uninvited guests that show up at the worst times and refuse to leave. Some tumors are benign (good balls), while others are malignant (bad balls). These aren’t the only categories; in the world of oncology, there are a lot of balls to juggle.
+
+### Tumor Types: Weird Balls Strange Balls
+
+Tumors come in two primary forms: solid and liquid. Solid tumors are masses of rogue cells that lump together into one big, unwanted ball of trouble. These can be found in just about anywhere in the body. Liquid tumors, on the other hand, prefer a more free-flowing lifestyle, like leukemia, which runs wild in the bloodstream.
+
+Beyond their classification as solid or liquid, tumors also come in a variety of shapes, which can influence their behavior and how they are treated. Spherical tumors are compact and well-rounded like a perfect ball, often making them easier to remove surgically. Oblate tumors are flatter and may create complications if they press against vital organs. Prolate tumors, on the other hand, are elongated along one axis, sometimes making complete removal difficult. Ellipsoidal tumors share characteristics with both spherical and prolate shapes, and their orientation can affect the approach to treatment. The most problematic tumors are irregular in shape, with jagged and unpredictable edges (like Minjun’s hair) that often signal aggressive growth and a higher likelihood of metastasis.
+
+The more jagged and aggressive a tumor’s shape, the more likely it is to spread (kind of like Ethan’s cold when he comes to school sick). Some tumors, such as polypoid ones, protrude from the surface, while ulcerated tumors form open sores. Infiltrative tumors sneak through surrounding tissues in a diffuse manner, making them especially challenging to detect and treat.
+
+### Cancer Treatments: Breaking Balls
+
+Science has devised several ways to deal with these misbehaving cellular balls. One of the most common methods is surgery, where a surgeon physically removes the tumor. If the tumor is neatly packaged and hasn’t spread, surgery can be highly effective.
+
+Radiation therapy provides another approach, blasting the tumor with high-energy rays, essentially microwaving the cancerous balls into oblivion. It’s basically a high-tech laser version of a flyswatter.
+
+Chemotherapy takes a more widespread approach, flooding the body with toxic drugs designed to hunt down and destroy cancerous cells. Unfortunately, chemotherapy doesn’t differentiate between good and bad balls, which is why patients often experience side effects like hair loss and nausea. A more refined approach comes in the form of targeted therapy, which focuses on specific molecular traits of cancerous cells, attacking only the ones that need to be destroyed while leaving healthy cells unharmed.
+
+Immunotherapy, on the other hand, enlists the body’s own immune system to recognize and attack cancerous cells. Normally, tumors disguise themselves as friendly tissue, but immunotherapy removes their invisibility cloak, allowing the immune system to fight back. Hormone therapy is another effective strategy for hormone-dependent cancers, such as breast and prostate cancer, by cutting off the cancer’s fuel supply and effectively starving the tumors (similar to how Ms. Babić stops us from drinking coffee).
+
+Last but not least, and our focus for today, hyperthermia therapy involves heating cancer cells to high temperatures to weaken or destroy them, usually around 40ºC to 43ºC. These rebellious balls don’t handle heat well, so this method essentially cooks them into submission. Often used alongside radiation or chemotherapy, hyperthermia makes cancer cells more vulnerable while leaving normal tissues mostly unharmed.
+
+### Effectiveness: How Well Do These Treatments Pop the Balls?
+
+Effectiveness varies based on the type of cancer, early detection, and whether or not the tumor has already sent out minions to other areas. Surgery works well for localized solid tumors, while chemo, radiation, or targeted therapy may be needed for widespread cases. Immunotherapy has shown promise, especially for previously untreatable cancers.
+
+At the end of the day, the best strategy is early detection. The sooner you catch those rebellious balls misbehaving, the better your chances of kicking them to the curb. So, do your screenings, listen to your body, and if something feels off, don’t hesitate to get it checked out. After all, nobody wants to deal with a bunch of unwanted cancerous balls.
+
+\
+
+![](./Graphics/tumor.jpg){#id .class width=640px}
+
+\
+
+# Part 2 - Destroying Tumors
+
+When normal tissue is heated, it is cooled by the dilation of blood vessels. A tumor has very few interior blood vessels and therefore is unable to take advantage of this cooling process. The shape of some tumors can be approximated by spheres (wrinkled and bumpy) or ellipsoids. The tumor temperature during treatment is highest at the center and gradually decreases toward the edges. Regions of tissue having the same temperature, called `equitherms`, can be visualized as closed surfaces that are nested one inside of the other. The equitherms for a spherical tumor and an elliptical tumor are given below. Notice in the graphs that the hottest area is at the tumor's center. One of the difficulties in effectively applying the `hyperthermia` treatment is determining the portion of the tumor heated to an effective temperature. The problem of determining the portion of the tumor that has been heated to an effective temperature reduces to finding the ratio where $V$ is the volume of the entire tumor and $V_T$ is the volume of the portion of the tumor that is heated above the `effective temperature` $T$.
+
+\
+
+### I. A Necessary Measurement?
+
+Before we begin, we need to note that it is `not necessary` to measure the temperature of the tumor's center if the temperature of the equitherm at half the radius of the tumor is already known to exceed the effective temperature. Since the temperature increases towards the center of the tumor, if an outer layer of the tumor has already exceeded the effective temperature, then the center has also definitely exceeded the effective temperature.
+
+In fact, if we know the radius that has reached the effective temperature, there is no need to measure any point within that radius, since any point inside will be hotter and thus above the effective temperature. This is shown in the video below, with the hollow white sphere representing the entire tumor and the colored sphere representing the equitherms, which is also the `leveled surface` at the given temperature:
+
+![](./Graphics/Part2Q1.mp4){#id .class width=800px}
+
+\
+
+### II. A Spherical Tumor
+
+For simplicity, let's examine a perfectly `spherical` tumor with radius $r$.
+
+If we know that the temperature at $\frac{1}{4}r$ has reached the effective level, we can find the `ratio` $V_T:V$, where $V_T$ is the volume of the portion of the tumor that is heated above the effective temperature $T$, and $V$ is the total volume of the tumor. To do this, we can just calculate the volumes separately:
+
+$$\begin{aligned}
+&V_T:V
+\\~\\&=
+\frac{4}{3}\pi\left(\frac{1}{4}r\right)^3:\frac{4}{3}\pi r^3
+\\~\\&=
+\left(\frac{1}{4}r\right)^3:r^3
+\\~\\&=
+\left(\frac{1}{4}\right)^3r^3:r^3
+\\~\\&=
+1:64
+\end{aligned}$$
+
+As we can see, despite the radius being $\frac{1}{4}r$, $V_T$ is not $\frac{1}{4}V$; instead, it is $\frac{1}{64}V$. Even if we give a specific value $r=2.5\text{ cm}$, $V_T$ is still $\frac{1}{64}V$, since the ratio $V_T:V$ is `independent` of the radius $r$.
+
+We can repeat our process of finding $V_T:V$ for different proportions of radii and record the results into a table:
+
+```{r Part 2}
+radius <- md(c("$$\\frac{1}{4}r$$", "$$\\frac{1}{3}r$$", "$$\\frac{1}{2}r$$", "$$\\frac{2}{3}r$$", "$$\\frac{3}{4}r$$", "$$r$$"))
+vt <- md(c("$$\\frac{16}{3}\\pi r^3$$", "$$\\frac{4}{81}\\pi r^3$$", "$$\\frac{1}{6}\\pi r^3$$", "$$\\frac{32}{81}\\pi r^3$$", "$$\\frac{9}{16}\\pi r^3$$", "$$\\frac{4}{3}\\pi r^3$$"))
+vtv <- md(c("$$\\frac{1}{64}$$", "$$\\frac{1}{27}$$", "$$\\frac{1}{8}$$", "$$\\frac{8}{27}$$", "$$\\frac{27}{64}$$", "$$1$$"))
+
+# Create a data frame for the values
+df <- data.frame(
+  radius = radius,
+  vt = vt,
+  vtv = vtv
+)
+
+table <- df %>%
+  gt() %>%
+  cols_label(
+    radius = md("$$\\text{Radius of} \\\\ \\text{effective temperature}$$"),
+    vt = md("$$V_T$$"),
+    vtv = md("$$\\frac{V_T}{V}$$")
+  ) %>%
+  # Apply center alignment and "Courier New" font to the body cells
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_body()
+  ) %>%
+  # Apply center alignment and "Courier New" font to the column headers
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply "Courier New" font and light blue background to the table title
+  tab_header(
+    title = md("Table of Effective Temperature Ratios")
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center", weight="bold"),
+      cell_fill(color = "lightblue")  # Light blue background for title
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  # Apply blue background and white text to the column labels
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center"),
+      cell_fill(color = "#E0F7FA")  # Blue background for column labels
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply varying shades of gray for each column
+  tab_style(
+    style = cell_fill(color = "#FF9999"),  # Lightest gray for the 1st column
+    locations = cells_body(columns = c(radius))
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#99FF99"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(vt))
+  )%>%
+  tab_style(
+    style = cell_fill(color = "#66B2FF"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(vtv))
+  )%>%
+  # Remove borders between all cells
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom", "left", "right"),,
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom"),
+      color = NULL,
+      weight = NULL
+    ),
+    locations = cells_body()
+  )
+
+table
+```
+
+Here, a pattern emerges:
+
+$$V_T:V=p^3$$
+
+where $p$ is the `proportion` of the tumor's radius $r$ that has heated above $T$.
+
+We can also see (from both the table and our new formula) that when $p=\frac{1}{2}$ (meaning that the portion of tumor within half of its radius is heated above $T$), $V_T:V=\frac{1}{8}$, not $\frac{1}{2}$. To find the proportion of radius needed for $V_T:V=\frac{1}{2}$, we can just use our equation from above:
+
+$$p^3=V_T:V=\frac{1}{2}$$
+$$\therefore p=\frac{1}{\sqrt[3]{2}}$$
+
+We can do the same thing for when $V_T:V=\frac{3}{4}$:
+
+$$p^3=V_T:V=\frac{3}{4}$$
+$$\therefore p=\sqrt[3]{\frac{3}{4}}$$
+
+Hence, we can conclude the following:
+
+- To heat $\frac{1}{2}$ of the tumor above the effective temperature $T$, $\frac{1}{\sqrt[3]{2}}$ of the tumor's radius $r$ has to reach $T$.
+- To heat $\frac{3}{4}$ of the tumor above $T$, $\sqrt[3]{\frac{3}{4}}r$ has to reach $T$.
+
+Now that we've analyzed spherical tumors, we can go on to analyzing slightly more complex tumor shapes.
+
+\
+
+### III. A Wrinkled Tumor
+
+Suppose we have a tumor modeled by the following equation:
+
+$$ \rho=0.5+0.345\sin8\theta\sin\phi\quad\begin{cases}0\leq\theta\leq2\pi\\0\leq\phi\leq\pi\end{cases}$$
+
+\
+
+```{r Part 3}
+# Define spherical coordinate grid
+theta <- seq(0, 2*pi, length.out = 200)  # Azimuthal angle (longitude)
+phi <- seq(0, pi, length.out = 200)      # Polar angle (latitude)
+
+# Create mesh grid using expand.grid
+grid <- expand.grid(theta = theta, phi = phi)
+
+# Define a variable radius function
+r_func <- function(theta, phi) {
+  return(0.5 + 0.345*sin(8*theta)*sin(1*phi))  # Deformation of the sphere
+}
+
+# Compute r for each (theta, phi) pair
+r <- with(grid, r_func(theta, phi))
+
+# Convert to Cartesian coordinates
+x <- with(grid, r * sin(phi) * cos(theta))
+y <- with(grid, r * sin(phi) * sin(theta))
+z <- with(grid, r * cos(phi))
+
+# Reshape into matrix form for surface plot
+X <- matrix(x, nrow = length(phi), ncol = length(theta))
+Y <- matrix(y, nrow = length(phi), ncol = length(theta))
+Z <- matrix(z, nrow = length(phi), ncol = length(theta))
+
+# Create the 3D surface plot
+fig <- plot_ly(x = ~X, y = ~Y, z = ~Z, type = "surface") %>%
+  layout(
+    title = "Wrinkled Tumor",
+    scene = list(
+      xaxis = list(title = "X"),
+      yaxis = list(title = "Y"),
+      zaxis = list(title = "Z")
+    )
+  )
+
+fig  # Display the plot
+```
+
+To `approximate` the volume of the tumor, we can calculate the volume of a sphere. For its radius, we can take the average value of $\rho$. Logically, the average value of $\rho$ is simply its first term $0.5$, since the second term is periodic due to the $\sin$ function (we can also verify this by solving the double integral $\frac{1}{2\pi\cdot\pi}\int_0^{2\pi}\int_0^\pi\rho \; d\phi d\theta$ for the average value of $\rho$). Thus, we get the following approximation:
+
+$$ V\approx\pi r^2 = \pi\cdot0.5^2=0.25\pi\approx 0.7854$$
+
+Nonetheless, this is still just an approximation. To find the `exact volume`, we will need a `triple integral` in `spherical coordinates`:
+
+$$\int\limits_0^{2\pi}\int\limits_0^\pi\int_0^{0.5+0.345\sin8\theta\sin\phi}\rho^2\sin\phi \; d\rho d\phi d\theta$$
+
+Now to solve this integral (using lots of `Wallis' Formula`):
+
+$$\begin{aligned}
+V&=
+\int\limits_0^{2\pi}\int\limits_0^\pi\int_0^{0.5+0.345\sin8\theta\sin\phi}\rho^2\sin\phi \; d\rho d\phi d\theta
+\\~\\&=
+\int\limits_0^{2\pi}\int\limits_0^\pi\frac{1}{3}\left(\frac{1}{2}+0.345\sin8\theta\sin\phi\right)^3\sin\phi \; d\phi d\theta
+\\~\\&=
+\frac{1}{3}\int\limits_0^{2\pi}\int\limits_0^\pi\left(\left(\frac{1}{2}\right)^3+3\cdot\left(\frac{1}{2}\right)^2\cdot0.345\sin8\theta\sin\phi+3\cdot\frac{1}{2}\cdot0.345^2\sin^28\theta\sin^2\phi+0.345^3\sin^38\theta\sin^3\phi\right)\sin\phi \; d\phi d\theta
+\\~\\&=
+\frac{2}{3}\int\limits_0^{2\pi}\int\limits_0^{\frac{\pi}{2}}\left(\frac{1}{8}\sin\phi+\frac{3}{4}\cdot0.345\sin8\theta\sin^2\phi+\frac{3}{2}\cdot0.345^2\sin^28\theta\sin^3\phi+0.345^3\sin^38\theta\sin^4\phi\right) \; d\phi d\theta
+\\~\\&=
+\frac{2}{3}\int\limits_0^{2\pi}\left(\frac{1}{8}+\frac{3}{4}\cdot0.345\sin8\theta\cdot\frac{1}{2}\cdot\frac{\pi}{2}+\frac{3}{2}\cdot0.345^2\sin^28\theta\cdot\frac{2}{3}+0.345^3\sin^38\theta\cdot\frac{1}{2}\cdot\frac{3}{4}\cdot\frac{\pi}{2}\right) \; d\theta
+\\~\\&=
+\frac{2}{3}\int\limits_0^{2\pi}\left(\frac{1}{8}+\frac{3\pi}{16}\cdot0.345\sin8\theta+0.345^2\sin^28\theta+\frac{3\pi}{16}0.345^3\sin^38\theta\right) \; d\theta
+\\~\\&=
+\frac{2}{3}\int\limits_0^{2\pi}\left(\frac{1}{8}+0.345^2\sin^28\theta\right) \; d\theta
+\\~\\&=
+\frac{8}{3}\int\limits_0^{\frac{\pi}{2}}\left(\frac{1}{8}+0.345^2\sin^28\theta\right) \; d\theta
+\\~\\&=
+\frac{8}{3}\left(\frac{1}{8}\cdot\frac{\pi}{2}+0.345^2\cdot\frac{1}{2}\cdot\frac{\pi}{2}\right)
+\\~\\&=
+\left(\frac{1}{6}+0.119025\cdot\frac{2}{3}\right)\pi
+\\~\\&\approx
+0.2460\pi
+\\~\\&\approx
+0.7729
+\end{aligned}$$
+
+Note that when the bounds of the integral is from $0$ to $2\pi$, functions of sine to an odd power can be discarded, since its positive area and negative area will be the same.
+
+Furthermore, Wallis' Formula still applies to $\sin^28\theta$ since $\theta$ has an integer coefficient, thus $\frac{\pi}{2}$ is a multiple of a quarter of its period. Therefore, $\sin^28\theta$ will have $8$ times the frequency of $\sin^2\theta$, but each peak also has $8$ times less width, thus the total area stays the same.
+
+With the exact volume of the tumor, we can now find the `percent error` of our estimate:
+
+$$\text{Error}\approx1-\frac{0.7854}{0.7729}=-0.0162=-1.62\%$$
+
+An error of less than $2\%$! That's pretty good. We can verify our exact volume by using a graphing calculator:
+
+$$V=0.772884$$
+
+That's precisely what we get if we evaluate our answer $\left(\frac{1}{6}+0.119025\cdot\frac{2}{3}\right)\pi$. Thus, our volume is correct.
+
+\
+
+### IV. A Bumpy Tumor
+
+Now suppose we have a tumor modeled by the following equation:
+
+```{r Part 4}
+# Define spherical coordinate grid
+theta <- seq(0, 2*pi, length.out = 200)  # Azimuthal angle (longitude)
+phi <- seq(0, pi, length.out = 200)      # Polar angle (latitude)
+
+# Create mesh grid using expand.grid
+grid <- expand.grid(theta = theta, phi = phi)
+
+# Define a variable radius function
+r_func <- function(theta, phi) {
+  return(0.75 + 0.35*sin(8*theta)*sin(4*phi))  # Deformation of the sphere
+}
+
+# Compute r for each (theta, phi) pair
+r <- with(grid, r_func(theta, phi))
+
+# Convert to Cartesian coordinates
+x <- with(grid, r * sin(phi) * cos(theta))
+y <- with(grid, r * sin(phi) * sin(theta))
+z <- with(grid, r * cos(phi))
+
+# Reshape into matrix form for surface plot
+X <- matrix(x, nrow = length(phi), ncol = length(theta))
+Y <- matrix(y, nrow = length(phi), ncol = length(theta))
+Z <- matrix(z, nrow = length(phi), ncol = length(theta))
+
+# Create the 3D surface plot
+fig <- plot_ly(x = ~X, y = ~Y, z = ~Z, type = "surface") %>%
+  layout(
+    title = "Bumpy Tumor",
+    scene = list(
+      xaxis = list(title = "X"),
+      yaxis = list(title = "Y"),
+      zaxis = list(title = "Z")
+    )
+  )
+
+fig  # Display the plot
+```
+
+To find the exact volume, we will again need a `triple integral` in `spherical coordinates`:
+
+$$\int\limits_0^{2\pi}\int\limits_0^\pi\int_0^{0.75+0.35\sin8\theta\sin4\phi}\rho^2\sin\phi \; d\rho d\phi d\theta$$
+
+Now to solve this integral (using even more of `Wallis' Formula` and also `double-angle identities`):
+
+$$\begin{aligned}
+V&=
+\int\limits_0^{2\pi}\int\limits_0^\pi\int_0^{0.75+0.35\sin8\theta\sin4\phi}\rho^2\sin\phi \; d\rho d\phi d\theta
+\\~\\&=
+\int\limits_0^{2\pi}\int\limits_0^\pi\frac{1}{3}\left(\frac{3}{4}+\frac{7}{20}\sin8\theta\sin\phi\right)^3\sin\phi \; d\phi d\theta
+\\~\\&=
+\frac{1}{3}\int\limits_0^{2\pi}\int\limits_0^\pi\left(\left(\frac{3}{4}\right)^3+3\cdot\left(\frac{3}{4}\right)^2\cdot\frac{7}{20}\sin8\theta\sin4\phi+3\cdot\frac{3}{4}\cdot\left(\frac{7}{20}\right)^2\sin^28\theta\sin^24\phi+\left(\frac{7}{20}\right)^3\sin^38\theta\sin^34\phi\right)\sin\phi \; d\phi d\theta
+\\~\\&=
+\frac{1}{3}\int\limits_0^{\pi}\int\limits_0^{2\pi}\left(\left(\frac{3}{4}\right)^3+3\cdot\left(\frac{3}{4}\right)^2\cdot\frac{7}{20}\sin8\theta\sin4\phi+3\cdot\frac{3}{4}\cdot\left(\frac{7}{20}\right)^2\sin^28\theta\sin^24\phi+\left(\frac{7}{20}\right)^3\sin^38\theta\sin^34\phi\right)\sin\phi \; d\theta d\phi
+\\~\\&=
+\frac{1}{3}\int\limits_0^{\pi}\int\limits_0^{2\pi}\left(\left(\frac{3}{4}\right)^3+3\cdot\frac{3}{4}\cdot\left(\frac{7}{20}\right)^2\sin^28\theta\sin^24\phi\right)\sin\phi \; d\theta d\phi
+\\~\\&=
+\frac{4}{3}\int\limits_0^{\pi}\int\limits_0^{\frac{\pi}{2}}\left(\frac{27}{64}+\frac{441}{1600}\sin^28\theta\sin^24\phi\right)\sin\phi \; d\theta d\phi
+\\~\\&=
+\frac{4}{3}\int\limits_0^{\pi}\left(\frac{27}{64}\cdot\frac{\pi}{2}+\frac{441}{1600}\cdot\frac{1}{2}\cdot\frac{\pi}{2}\sin^24\phi\right)\sin\phi \; d\phi
+\\~\\&=
+\frac{4\pi}{3}\int\limits_0^{\pi}\left(\frac{27}{128}+\frac{441}{6400}\sin^24\phi\right)\sin\phi \; d\phi
+\\~\\&=
+\frac{4\pi}{3}\left(\;\int\limits_0^{\pi}\frac{27}{128}\sin\phi\;d\phi+\int\limits_0^{\pi}\frac{441}{6400}\sin^24\phi\sin\phi \; d\phi\right)
+\\~\\&=
+\frac{4\pi}{3}\left(\left.\frac{27}{128}\cos\phi\right|_\pi^0+\int\limits_0^{\pi}\frac{441}{6400}\left(2\sin2\phi\cos2\phi\right)^2\sin\phi \; d\phi\right)
+\\~\\&=
+\frac{4\pi}{3}\left(\frac{27}{128}\cdot2+\int\limits_0^{\pi}\frac{441}{6400}\left(2\left(2\sin\phi\cos\phi\right)\left(1-2\sin^2\phi\right)\right)^2\sin\phi \; d\phi\right)
+\\~\\&=
+\frac{4\pi}{3}\left(\frac{27}{64}+\int\limits_0^{\pi}\frac{441}{6400}\left(4\left(\sin\phi\cos\phi-2\sin^3\phi\cos\phi\right)\right)^2\sin\phi \; d\phi\right)
+\\~\\&=
+\frac{4\pi}{3}\left(\frac{27}{64}+\frac{441}{400}\int\limits_0^{\pi}\left(\sin\phi\cos\phi-2\sin^3\phi\cos\phi\right)^2\sin\phi \; d\phi\right)
+\\~\\&=
+\frac{9\pi}{16}+\frac{147\pi}{100}\int\limits_0^{\pi}\left(\sin^2\phi\cos^2\phi-4\sin^4\phi\cos^2\phi+4\sin^6\phi\cos^2\phi\right)\sin\phi \; d\phi
+\\~\\&=
+\frac{9\pi}{16}+\frac{147\pi}{100}\int\limits_0^{\pi}\left(\sin^3\phi-4\sin^5\phi+4\sin^7\phi\right)\cos^2\phi \; d\phi
+\\~\\&=
+\frac{9\pi}{16}+\frac{147\pi}{100}\int\limits_0^{\pi}\left(\sin^3\phi-4\sin^5\phi+4\sin^7\phi\right)\left(1-\sin^2\phi\right) \; d\phi
+\\~\\&=
+\frac{9\pi}{16}+\frac{147\pi}{100}\int\limits_0^{\pi}\left(\left(\sin^3\phi-4\sin^5\phi+4\sin^7\phi\right)-\left(\sin^5\phi-4\sin^7\phi+4\sin^9\phi\right)\right) \; d\phi
+\\~\\&=
+\frac{9\pi}{16}+\frac{147\pi}{50}\int\limits_0^{\frac{\pi}{2}}\left(\sin^3\phi-5\sin^5\phi+8\sin^7\phi-4\sin^9\phi\right) \; d\phi
+\\~\\&=
+\frac{9\pi}{16}+\frac{147\pi}{50}\left(\frac{2}{3}-5\cdot\frac{2}{3}\cdot\frac{4}{5}+8\cdot\frac{2}{3}\cdot\frac{4}{5}\cdot\frac{6}{7}-4\cdot\frac{2}{3}\cdot\frac{4}{5}\cdot\frac{6}{7}\cdot\frac{8}{9}\right)
+\\~\\&=
+\frac{787\pi}{1200}
+\\~\\&\approx
+0.6558\pi
+\\~\\&\approx
+2.0604
+\end{aligned}$$
+
+We can verify our volume by using a graphing calculator:
+
+$$V=2.060361$$
+
+Which is what we get if we evaluate our answer $\frac{787}{1200}\pi$. Thus, our volume is correct.
+
+\
+
+# Final Note
+
+Now that we're able to use integration to find the volume of tumors, we can find the proportion of the tumor that has heated to the effective temperature. This project is already long enough though, so sadly this will not fit.
+
+![](./Graphics/sad.jpg){#id .class width=640px}
+
+\
+
+# Bibliography
+
+* American Cancer Society. Cancer Facts & Figures 2024. American Cancer Society, 2024, www.cancer.org.
+
+* Miller, K. D., et al. "Cancer Treatment and Survivorship Statistics, 2023." CA: A Cancer Journal for Clinicians, vol. 73, no. 2, 2023, pp. 123-142. Wiley Online Library, doi:10.3322/caac.21763.
+
+* National Cancer Institute. "Types of Cancer Treatment." National Institutes of Health, 2023, www.cancer.gov/about-cancer/treatment/types.
+
+* Siegel, Rebecca L., et al. "Cancer Statistics, 2024." CA: A Cancer Journal for Clinicians, vol. 74, no. 1, 2024, pp. 7-30. Wiley Online Library, doi:10.3322/caac.21780.

@@ -1,0 +1,901 @@
+---
+title: "Project 2: Race Car Cornering"
+author: "Aiden Gu"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+mathjax: default
+header-includes:
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width=7, fig.height=4, format = "latex")
+if(!require('pacman')) {
+  install.packages('pacman')
+}
+pacman::p_load(rgl, plotly, gt, ggplot2, gridExtra, grid, dplyr, tidyr, cowplot) 
+```
+
+```{css style settings, echo = FALSE}
+blockquote {
+    padding: 10px 20px;
+    margin: 0 0 20px;
+    line-height: 20px;
+    font-size: 14px;
+    border-left: 5px solid #eee;
+}
+
+.page-break {
+  page-break-before: always;
+  display: block;
+  margin-top: 700px;
+}
+
+.title {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.subtitle, .author, .date {
+  text-align: center;
+}
+
+h2{
+  font-size: 48px !important;
+  color: #4189b6 !important;
+}
+
+h3{
+  font-size: 32px !important;
+  color: #47975e !important;
+}
+
+body{
+  font-size: 18px !important;
+}
+
+#TOC{
+  font-size: 14px !important;
+}
+
+code {
+    background-color: #EFEFFF;
+    font-style: italic;
+}
+```
+
+![](./Graphics/CARS.avif){#id .class width=800px}
+
+## Part 1 - A Brief History of Auto-Racing
+
+Car racing’s journey from rickety, steam-belching contraptions to today’s high-tech, world-famous supercars is packed with wild stories and weird traditions. It all kicked off in 1894 with the Paris-Rouen race, essentially a dare cooked up by a French newspaper to prove that these “horseless carriages” could actually go somewhere. Back then, “racing” was less about speed and more about keeping your vehicle in one piece — cars broke down, got lost, and generally limped to the finish. But people loved the spectacle, and car racing was born.
+
+Soon, it wasn’t just local inventors; major companies joined in. In 1900, the Gordon Bennett Cup launched, inviting different nations to compete — the automotive Olympics of its time. National pride was on the line, and it was fierce. This competition laid the groundwork for some standard rules and introduced an international twist to the racing scene. Then, in 1906, we got the first true “Grand Prix” in France, where racers zoomed around closed circuits instead of weaving through the streets (and crowds), a move that saved some public panic and added to the event’s appeal.
+
+With the 1910s came big names and epic distances, like the Indianapolis 500 in the U.S. This race gave drivers a chance to hammer down for 500 miles — at ridiculous speeds. In 1923, the 24 Hours of Le Mans took endurance to a new level, challenging racers to go non-stop for a full day and night. This legendary race tests not just speed but the mettle of both man and machine. By the time Formula One took off in 1950, car racing had become a global spectacle, with drivers achieving rockstar status and teams investing millions in shaving seconds off lap times.
+
+Racetracks themselves became icons. The Monaco Grand Prix, weaving through city streets by the Mediterranean, is as glamorous as it is deadly, demanding precision and nerve. Silverstone, known as “the Home of British Motor Racing,” hosted the first Formula One race and has seen everything from spectacular wins to shocking crashes. The Nürburgring in Germany, nicknamed “The Green Hell” by legendary racer Jackie Stewart, is a track so twisty, challenging, and, frankly, terrifying that it’s in a league of its own.
+
+In the 1960s and ’70s, racing entered a golden age of innovation, competition, and, yes, a little bit of craziness. The Ford-Ferrari rivalry became legendary as Ford took on Ferrari’s dominance at Le Mans. Formula One rivalries between teams like Ferrari, McLaren, and Lotus added drama on and off the track, fueling an era that left fans and media obsessed with the speed, danger, and glamour of racing.
+
+Today, racing has grown beyond the screech of tires and roar of engines. Formula E is carving out a space for electric racing, while innovations in AI have introduced Roborace — racing, but with self-driving cars (think sci-fi meets Formula 1). Traditionalists may wince at the quiet hum of electric motors, but these changes are driving motorsport toward a greener, more futuristic path.
+
+From rugged country roads to modern circuits packed with tech, car racing is a tale of competition, risk, and evolution — one that's constantly fueled by innovation and a universal love for the thrill of speed.
+
+![](./Graphics/YasMarina.jpg){#id .class width=640px}
+
+**My Sister at the Yas Marina Circuit**
+
+\
+
+## Part 2 - Navigating Flat Turns
+
+The `Walt Disney World Speedway` in Orlando, Florida has three `straightaways` and three `turns`. The straightaways have lengths of $1487 \text{ft}$, $572 \text{ft}$, and $909 \text{ft}$. The turns have lengths of $990.35 \text{ft}$, $976.35 \text{ft}$, and $417.40 \text{ft}$.
+
+![](./Graphics/WaltDisneyWorldSpeedway.png){#id .class width=512px}
+
+\
+
+### I. Velocity and Acceleration Vectors
+
+Let $\vec{r}_1(t)$ be the `position vector` of Babić's race car at `Turn 1`:
+
+$\qquad\vec{r}_1(t)=\begin{bmatrix} 446.85\cos(0.4759t) \\ 446.85\sin(0.4759t) \end{bmatrix}: t\in(0, \, 4.66)$
+
+Differentiating with respect to $t$, we can get the `velocity vector` $\vec{v}_1(t)$:
+
+$\qquad\vec{v}_1(t)=\vec{r}_{1}^{\prime}(t)=\begin{bmatrix} -212.6559\sin(0.4759t) \\ 212.6559\cos(0.4759t) \end{bmatrix}: t\in(0, \, 4.66)$$
+
+Differentiating with respect to $t$ again, we can get the `acceleration vector` $\vec{a}_1(t)$:
+
+$\qquad\vec{a}_1(t)=\vec{v}_{1}^{\prime}(t)=\vec{r}_{1}^{\prime\prime}(t)=\begin{bmatrix} -101.2029\cos(0.4759t) \\ -101.2029\sin(0.4759t) \end{bmatrix}: t\in(0, \, 4.66)$
+
+To find `speed` $v_1$, we can simply take the magnitude of the velocity vector:
+
+$\qquad\begin{aligned} v_1 &= \|\vec{v}_1(t)\| \\~\\ &= \sqrt{\vec{v}_1(t) \cdot \vec{v}_1(t)} \\~\\ &= \sqrt{212.6559^2[\sin^2(0.4759t)+\cos^2(0.4759t)]} \\~\\ &= \sqrt{212.6559^2} \\~\\ &= 212.6559  \; (\text{ft/s}) \end{aligned}$
+
+Doing the same thing to find the magnitude of acceleration:
+
+$\qquad\begin{aligned} a_1 &= \|\vec{a}_1(t)\| \\~\\ &= 101.2029  \; (\text{ft/s}) \end{aligned}$
+
+We can also graph $\vec{r}_1(t)$, $\vec{v}_1(t)$, and $\vec{a}_1(t)$ on the same plane:
+
+![](./Graphics/Part2Turn1.mp4){#id .class width=640px}
+
+Now let $\vec{r}_2(t)$ be the `position vector` of Babić's race car at `Turn 2`:
+
+$\qquad\vec{r}_2(t)=\begin{bmatrix} 522.47\cos(0.4211t) \\ 522.47\sin(0.4211t) \end{bmatrix}: t\in(0, \, 4.44)$
+
+We can repeat the same processes we used for Turn 1 to find $\vec{v}_2(t)$, $\vec{a}_2(t)$, and $v_2$:
+
+$\qquad\begin{aligned} &\vec{v}_2(t)=\begin{bmatrix} -220.0121\cos(0.4211t) \\ 220.0121\sin(0.4211t) \end{bmatrix}: t\in(0, \, 4.44) \\~\\ &\vec{a}_2(t)=\begin{bmatrix} -92.6471\cos(0.4211t) \\ -92.6471\sin(0.4211t) \end{bmatrix}: t\in(0, \, 4.44) \\~\\ &v_2=220.0121  \; (\text{ft/s})  \\~\\ &a_2=92.6471  \; (\text{ft/s}) \end{aligned}$
+
+Graphing the three vectors on the same plane:
+
+![](./Graphics/Part2Turn2.mp4){#id .class width=640px}
+
+Lastly, let's set $\vec{r}_3(t)$ be the `position vector` of Babić's race car at `Turn 3`:
+
+$\qquad\vec{r}_3(t)=\begin{bmatrix} 733.89\cos(0.3797t) \\ 733.89\sin(0.3797t) \end{bmatrix}: t\in(0, \, 1.50)$
+
+Again, using the same processes to find $\vec{v}_3(t)$, $\vec{a}_3(t)$, and $v_3$:
+
+$\qquad\begin{aligned} &\vec{v}_3(t)=\begin{bmatrix} -278.6580\cos(0.4211t) \\ 278.6580\sin(0.4211t) \end{bmatrix}: t\in(0, \, 1.50) \\~\\ &\vec{a}_3(t)=\begin{bmatrix} -105.8065\cos(0.4211t) \\ -105.8065\sin(0.4211t) \end{bmatrix}: t\in(0, \, 1.50) \\~\\ &v_3=278.6580  \; (\text{ft/s})  \\~\\ &a_3=105.8065  \; (\text{ft/s}) \end{aligned}$
+
+And lastly, graphing the three vectors together:
+
+![](./Graphics/Part2Turn3.mp4){#id .class width=640px}
+
+As we can see, the `speed` $v$ of the three turns are `constant` throughout each turn, equaling the coefficients of the trigonometric functions of their respective velocity vectors $\vec{v}(t)$. Their `velocity vectors`, however, are not constant; they are `rotating`. This is the same for acceleration; the `acceleration` $a$ of the three turns are `constant` throughout each turn, equaling the coefficients of the trigonometric functions of their respective acceleration vectors $\vec{a}(t)$. Their `acceleration vectors`, however, are not constant; they are also `rotating`. In fact, the acceleration vectors are always `orthogonal` to the velocity vectors.
+
+\
+
+### II. Taking Turns
+
+To find the `curvature` of each turn, we need to first find the `radius`. Since each turn is an `arc` of a circle, we can look at the `coefficient` of the trigonometric functions of each `position function` $\vec{r}(t)$ to determine the radius of the circle. Thus, for the three turns, we can get the following values:
+
+```{r Part2Sec2Radii}
+turn <- c(1, 2, 3)
+radius <- c(446.85, 522.47, 733.89)
+
+# Create a data frame for the values
+df <- data.frame(
+  turn = turn,
+  radius = radius
+)
+
+table <- df %>%
+  gt() %>%
+  cols_label(
+    turn = "Turn",
+    radius = "Radius (ft)",
+  ) %>%
+  # Apply center alignment and "Courier New" font to the body cells
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_body()
+  ) %>%
+  # Apply center alignment and "Courier New" font to the column headers
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply "Courier New" font and light blue background to the table title
+  tab_header(
+    title = md("Table of Turn Radii")
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center", weight="bold"),
+      cell_fill(color = "lightblue")  # Light blue background for title
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  # Apply blue background and white text to the column labels
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center"),
+      cell_fill(color = "#E0F7FA")  # Blue background for column labels
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply varying shades of gray for each column
+  tab_style(
+    style = cell_fill(color = "gray80"),  # Lightest gray for the 1st column
+    locations = cells_body(columns = c(turn))
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#FF9999"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(radius))
+  )%>%
+  # Remove borders between all cells
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom", "left", "right"),,
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom"),
+      color = NULL,
+      weight = NULL
+    ),
+    locations = cells_body()
+  )
+
+table
+```
+
+Using the formula for curvature $\kappa=\frac{1}{r}$, we can plug in the three values of radii for the three different values for curvature:
+
+```{r Part2Sec2Curvature}
+turn <- c(1, 2, 3)
+radius <- c(446.85, 522.47, 733.89)
+
+# Create a data frame for the values
+df <- data.frame(
+  turn = turn,
+  curvature = 1/radius
+)
+
+table <- df %>%
+  gt() %>%
+  cols_label(
+    turn = "Turn",
+    curvature = md("Curvature (ft<sup>-1</sup>)"),
+  ) %>%
+  # Apply center alignment and "Courier New" font to the body cells
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_body()
+  ) %>%
+  # Apply center alignment and "Courier New" font to the column headers
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply "Courier New" font and light blue background to the table title
+  tab_header(
+    title = md("Table of Turn Curvature")
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center", weight="bold"),
+      cell_fill(color = "lightblue")  # Light blue background for title
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  # Apply blue background and white text to the column labels
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center"),
+      cell_fill(color = "#E0F7FA")  # Blue background for column labels
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply varying shades of gray for each column
+  tab_style(
+    style = cell_fill(color = "gray80"),  # Lightest gray for the 1st column
+    locations = cells_body(columns = c(turn))
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#99FF99"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(curvature))
+  )%>%
+  # Remove borders between all cells
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom", "left", "right"),,
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom"),
+      color = NULL,
+      weight = NULL
+    ),
+    locations = cells_body()
+  )
+
+table
+```
+
+If we were to judge a turn's `difficulty` based off of curvature alone, then it's pretty simple. The greater the curvature, the more difficult it is. Thus, based off of `curvature alone`, Turn 1 is the hardest, and Turn 3 is the easiest.
+
+$\qquad \text{Difficulty}: \; \text{Turn 1} > \text{Turn 2} > \text{Turn 3}$
+
+However, this is only considering curvature alone. What if the race cars have a `set speed` they have to traverse these turns in? Let's say that for each of these turns, they have to follow the `velocity vector` $\vec{v}(t)$ from before.
+
+So how should we compare each turn? The answer: $a_N$.
+
+$a_N$ is the `normal component` of `acceleration`, which means it is the component of the acceleration vector that is `orthogonal` to the `velocity vector`. Why use this metric? Because it is what makes the cars work. The greater this acceleration is, the greater force the car has to exert, since $F\propto a$.
+
+To calculate $a_N$, we can simply take the `magnitude` of the `cross product` of $\vec{a}(t)$ and $\widehat{T}(t)$, where $\widehat{T}(t)$ is the normalized version of $\vec{v}(t)$, or $\frac{\vec{v}(t)}{v}$. But wait! We're in 2D, so how do we take the cross product? To do so, we can use the dimensionless equivalent of the cross product: the `wedge product` (or exterior product).
+
+Let's walk through Turn 1 together. First we find $\widehat{T_1}(t)$:
+
+$\qquad\begin{aligned} \widehat{T_1}(t) &= \frac{\vec{v}_1(t)}{v_1} \\~\\ &= \frac{−212.6559\sin(0.4759t)\widehat{\imath}+212.6559\cos(0.4759t)\widehat{\jmath}}{212.6559} \\~\\ &= -\sin(0.4759t)\widehat{\imath}+\cos(0.4759t)\widehat{\jmath} \end{aligned}$
+
+Now to find the wedge product $a_N^B$ using the `associative` and `distributive` properties:
+
+$\qquad\begin{aligned} a_N^B &= \vec{a}_1(t)\wedge\widehat{T_1}(t) \\~\\ &= (−101.2029\cos(0.4759t)\widehat{\imath}−101.2029\sin(0.4759t)\widehat{\jmath}) \wedge (-\sin(0.4759t)\widehat{\imath}+\cos(0.4759t)\widehat{\jmath}) \\~\\ &= −101.2029\cos(0.4759t)\widehat{\imath} \wedge \left[-\sin(0.4759t)\widehat{\imath}+\cos(0.4759t)\widehat{\jmath}\right] \\ & \quad\,−101.2029\sin(0.4759t)\widehat{\jmath} \wedge \left[-\sin(0.4759t)\widehat{\imath}+\cos(0.4759t)\widehat{\jmath}\right] \\~\\ &= 101.2029\cos(0.4759t)\sin(0.4759t)\widehat{\imath}\wedge\widehat{\imath}-101.2029\cos^2(0.4759t)\widehat{\imath}\wedge\widehat{\jmath} + \\ & \quad\, 101.2029\sin^2(0.4759t)\widehat{\jmath}\wedge\widehat{\imath}-101.2029\sin(0.4759t)\cos(0.4759t)\widehat{\jmath}\wedge\widehat{\imath} \end{aligned}$
+
+Since $\widehat{\imath}\wedge\widehat{\imath}=0$, $\widehat{\jmath}\wedge\widehat{\jmath}=0$, and $\widehat{\imath}\wedge\widehat{\jmath}=-\widehat{\jmath}\wedge\widehat{\imath}$, we can simplify even further:
+
+$\qquad\begin{aligned} a_{N1}^B &= -101.2029\cos^2(0.4759t)\widehat{\imath}\wedge\widehat{\jmath} - 101.2029\sin^2(0.4759t)\widehat{\imath}\wedge\widehat{\jmath} \\~\\ &= -101.2029\left[\cos^2(0.4759t)+\sin^2(0.4759t)\right]\widehat{\imath}\wedge\widehat{\jmath} \\~\\ &= -101.2029\widehat{\imath}\wedge\widehat{\jmath} \end{aligned}$
+
+We can see that the wedge product of $\vec{a}_1(t)$ and $\widehat{T_1}(t)$ produces a `bivector`. To find the `magnitude` $a_{N1}$ of the bivector, we can use the formula $\sqrt{\langle a_{N1}^B(a_{N1}^B)^{\dagger} \rangle_0}$ (and the fact that $\widehat{\imath}^2=\widehat{\jmath}^2=1$):
+
+$\qquad\begin{aligned} a_{N1} &= \sqrt{\langle a_{N1}^B(a_{N1}^B)^{\dagger} \rangle_0} \\~\\ &= \sqrt{\langle (-101.2029\widehat{\imath}\wedge\widehat{\jmath})(-101.2029\widehat{\imath}\wedge\widehat{\jmath})^{\dagger} \rangle_0} \\~\\ &= \sqrt{\langle 101.2029^2\left[(\widehat{\imath}\wedge\widehat{\jmath})(\widehat{\jmath}\wedge\widehat{\imath})\right] \rangle_0} \\~\\ &= \sqrt{\langle 101.2029^2(\widehat{\imath}\widehat{\jmath}\widehat{\jmath}\widehat{\imath}) \rangle_0} \\~\\ &= \sqrt{\langle 101.2029^2(\widehat{\imath}\widehat{\imath}) \rangle_0} \\~\\ &= \sqrt{\langle 101.2029^2\rangle_0} \\~\\ &= \sqrt{101.2029^2} \\~\\ &= 101.2029 \; (\text{ft/s}^2)\end{aligned}$
+
+Since $a_{N1} = a_1$, we can conclude that for these circular turns, the magnitude of acceleration is the same as the normal component of acceleration (one can verify this by calculating the magnitude of the wedge product for the two other turns). Thus, to compare the normal component of acceleration of the turns, we can just compare their magnitude of acceleration: 
+
+```{r Part2Sec2Acceleration}
+turn <- c(1, 2, 3)
+acceleration <- c(101.2029, 92.6471, 105.8065)
+
+# Create a data frame for the values
+df <- data.frame(
+  turn = turn,
+  acceleration = acceleration
+)
+
+table <- df %>%
+  gt() %>%
+  cols_label(
+    turn = "Turn",
+    acceleration = md("Normal Acceleration a<sub>N</sub>=a (ft/s<sup>2</sup>)"),
+  ) %>%
+  # Apply center alignment and "Courier New" font to the body cells
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_body()
+  ) %>%
+  # Apply center alignment and "Courier New" font to the column headers
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply "Courier New" font and light blue background to the table title
+  tab_header(
+    title = md("Table of Turn Normal Acceleration")
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center", weight="bold"),
+      cell_fill(color = "lightblue")  # Light blue background for title
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  # Apply blue background and white text to the column labels
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center"),
+      cell_fill(color = "#E0F7FA")  # Blue background for column labels
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply varying shades of gray for each column
+  tab_style(
+    style = cell_fill(color = "gray80"),  # Lightest gray for the 1st column
+    locations = cells_body(columns = c(turn))
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#66B2FF"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(acceleration))
+  )%>%
+  # Remove borders between all cells
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom", "left", "right"),,
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom"),
+      color = NULL,
+      weight = NULL
+    ),
+    locations = cells_body()
+  )
+
+table
+```
+
+Looking at the table, it might come as a surprise that when taking speed into account, Turn 3 is actually the most difficult! Since it has the greatest normal component of acceleration, the car has to exert more force to follow the path with the given speed from before. By this logic, Turn 2 is still the easiest.
+
+$\qquad \text{Difficulty}: \; \text{Turn 3} > \text{Turn 1} > \text{Turn 2}$
+
+\
+
+### III. Graphing Velocity and Acceleration Vectors
+
+Below is a table of values for $\vec{r}_1(t)$:
+
+```{r Part2Sec3}
+t_val <- c(0.00, 1.00, 2.00, 3.00, 4.00, 4.66)
+x_val <- c(446.8500, 397.1964, 259.2704,  63.7246, -145.9833, -269.3227)
+y_val <- c(       0, 204.7192, 363.9420, 442.2828,  422.3314,  356.5673)
+
+# Create a data frame for the values
+df <- data.frame(
+  t = t_val,
+  x = x_val,
+  y = y_val
+)
+
+table <- df %>%
+  gt() %>%
+  cols_label(
+    t = "t",
+    x = "x(t)",
+    y = "y(t)"
+  ) %>%
+  # Apply center alignment and "Courier New" font to the body cells
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_body()
+  ) %>%
+  # Apply center alignment and "Courier New" font to the column headers
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply "Courier New" font and light blue background to the table title
+  tab_header(
+    title = md("Table of r<sub>1</sub>(t)")
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center", weight="bold"),
+      cell_fill(color = "lightblue")  # Light blue background for title
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  # Apply blue background and white text to the column labels
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center"),
+      cell_fill(color = "#E0F7FA")  # Blue background for column labels
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply varying shades of gray for each column
+  tab_style(
+    style = cell_fill(color = "gray80"),  # Lightest gray for the 1st column
+    locations = cells_body(columns = c(t))
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#FF9999"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(x))
+  )%>%
+  tab_style(
+    style = cell_fill(color = "#99FF99"),  # Slightly darker gray for the 4th column
+    locations = cells_body(columns = c(y))
+  ) %>%
+  # Remove borders between all cells
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom", "left", "right"),,
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom"),
+      color = NULL,
+      weight = NULL
+    ),
+    locations = cells_body()
+  )
+
+table
+```
+
+Here are the corresponding `velocity vectors` $\vec{v}_1(t)$ and `acceleration vectors` $\vec{a}_1(t)$ at each point of the table:
+
+![](./Graphics/Part2Sec3.mp4){#id .class width=640px}
+
+You can see that the velocity vectors $\vec{v}_1(t)$ are of equal length and `tangential` to the curve $\vec{r}_1(t)$, and the acceleration vectors $\vec{a}_1(t)$ are of equal length and `orthogonal` to the curve $\vec{r}_1(t)$, pointing towards the `origin` in the `radial direction`. This makes sense, since our conclusion from before was the the magnitude of acceleration is equal to its normal component, so the acceleration vector must be orthogonal to the velocity vector.
+
+\
+
+### IV. Staying on Track
+
+Usually to find the `centripetal force` required to stay on a `circular path`, we used the formula $F=m\frac{v^2}{r}$. However, since we already know the magnitude of acceleration for all three turns, we can just use $F=ma$. If the `mass` of Babić race car is $1800\text{lbs}$, we can calculate the force (in $\text{poundals}$, or $\text{ft/s}^2$) required for each turn:
+
+```{r Part2Sec4}
+turn <- c(1, 2, 3)
+acceleration <- c(101.2029, 92.6471, 105.8065)
+
+# Create a data frame for the values
+df <- data.frame(
+  turn = turn,
+  force = 1800*acceleration
+)
+
+table <- df %>%
+  gt() %>%
+  cols_label(
+    turn = "Turn",
+    force = md("Centripetal Force (pdl)"),
+  ) %>%
+  # Apply center alignment and "Courier New" font to the body cells
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_body()
+  ) %>%
+  # Apply center alignment and "Courier New" font to the column headers
+  tab_style(
+    style = cell_text(align = "center", font = c("Courier New", "monospace")),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply "Courier New" font and light blue background to the table title
+  tab_header(
+    title = md("Table of Turn Force")
+  ) %>% 
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center", weight="bold"),
+      cell_fill(color = "lightblue")  # Light blue background for title
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  # Apply blue background and white text to the column labels
+  tab_style(
+    style = list(
+      cell_text(font = c("Courier New", "monospace"), align = "center"),
+      cell_fill(color = "#E0F7FA")  # Blue background for column labels
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  # Apply varying shades of gray for each column
+  tab_style(
+    style = cell_fill(color = "gray80"),  # Lightest gray for the 1st column
+    locations = cells_body(columns = c(turn))
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#FFCC99"),  # Slightly darker gray for the 2nd column
+    locations = cells_body(columns = c(force))
+  )%>%
+  # Remove borders between all cells
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("left", "right"),
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom", "left", "right"),,
+      color = "#D3D3D3",
+      weight = px(2)
+    ),
+    locations = cells_title(groups = "title")
+  ) %>%
+  tab_style(
+    style = cell_borders(
+      sides = c("top", "bottom"),
+      color = NULL,
+      weight = NULL
+    ),
+    locations = cells_body()
+  )
+
+table
+```
+
+\
+
+## Part 3 - Driving Banked Turns
+
+With the basics covered, we can now think more generally. Now we have to consider:
+
+* The `weight` of the car
+
+* The `friction` between the tires and the road
+
+* The `radius` of the osculating circle of the turn
+
+* The bank `angle`
+
+The `Bristol Motor Speedway` in Tennessee has two `straightaways` and two `turns`. It is $0.533$ miles long, with bank angles that go all the way up to $30^{\circ}$. The track is mainly used for NASCAR race cars.
+
+![](./Graphics/BristolMotorSpeedway.svg){#id .class width=512px}
+
+Let Babić's race car of `mass` $m$ with a constant `angular speed` $\omega$ move around an arc of `radius` $R$ banked at an `angle` of $\theta$. Its center of mass off the ground by `height` $h$ and `time` $t$ is measured in seconds.
+
+![](./Graphics/Part3Sec0.png){#id .class width=640px}
+
+Let the car have a `position function` $\vec{r}(t)$:
+
+$\qquad \vec{r}(t)=\begin{bmatrix} R\cos(\omega t) \\ R\sin(\omega t) \\ h \end{bmatrix}$
+
+\
+
+### I. Velocity Function
+
+To find the `velocity function` $\vec{v}(t)$ of the car, we simply take the derivative of $\vec{r}(t)$ with respect to $t$:
+
+$\qquad \vec{v}(t)=\vec{r}^{\prime}(t) = \begin{bmatrix} -\omega R\sin(\omega t) \\ \omega R\cos(\omega t) \\ 0 \end{bmatrix}$
+
+Since the `tangent line` of a circle is `perpendicular` to its radius, then if the `dot product` of $\vec{v}(t)$ and $\vec{r}(t)$ is $0$, then $\vec{v}(t)$ is `tangent` to the circular curve.
+
+$\qquad\begin{aligned} \vec{v}(t)\cdot\vec{r}(t) &= \begin{bmatrix} -\omega R\sin(\omega t) \\ \omega R\cos(\omega t) \\ 0 \end{bmatrix} \cdot \begin{bmatrix} R\cos(\omega t) \\ R\sin(\omega t) \\ h \end{bmatrix} \\~\\ &= -\omega R^2 \sin(\omega t) \cos(\omega t) + \omega R^2 \cos(\omega t) \sin(\omega t) \\~\\ &=0 \end{aligned}$
+
+Therefore the car's velocity is tangent to the circular curve, and thus a centripetal force is needed to keep the car on the track.
+
+![](./Graphics/Part3Sec1.mp4){#id .class width=640px}
+
+\
+
+### II. Speed
+
+To find `speed` $v$, we simply take the magnitude of the car's velocity $\vec{v}(t)$:
+
+$\qquad\begin{aligned} v &= \|\vec{v}(t)\| = \sqrt{\vec{v}(t)\cdot\vec{v}(t)} \\~\\ &= \sqrt{\omega ^2 R ^2 \left[\sin^2(\omega t) + \cos^2(\omega t)\right]} \\~\\ &= \sqrt{\omega ^2 R ^2} \\~\\ &= \omega R\end{aligned}$
+
+Since $v=\omega R$, we can do some basic algebra do get the following equality:
+
+$\qquad\begin{aligned}  &v=\omega R \\~\\ &\therefore \frac{1}{v}=\frac{1}{\omega R} \\~\\ &\therefore \frac{R}{v}=\frac{1}{\omega} \\~\\ &\therefore \frac{2\pi R}{v}=\frac{2\pi}{\omega} \end{aligned}$
+
+\
+
+### III. Acceleration
+
+To find `acceleration` $\vec{a}(t)$, we simply take the derivative of the car's velocity $\vec{v}(t)$:
+
+$\qquad \vec{a}(t)=\vec{v}^{\prime}(t) = \begin{bmatrix} -\omega^2 R\cos(\omega t) \\ -\omega^2 R\sin(\omega t) \\ 0 \end{bmatrix}$
+
+Now to find the `magnitude` of acceleration $a$:
+
+$\qquad\begin{aligned} a &= \|\vec{a}(t)\| = \sqrt{\vec{a}(t)\cdot\vec{a}(t)} \\~\\ &= \sqrt{\omega ^4 R ^2 \left[\cos^2(\omega t) + \sin^2(\omega t)\right]} \\~\\ &= \sqrt{\omega ^4 R ^2} \\~\\ &= \omega^2 R\end{aligned}$
+
+To see if $\vec{a}(t)$ points towards the center of the circle, we can take its `cross product` with $\vec{r}(t)$ with $h=0$. This way, both $\vec{a}(t)$ and $\vec{r}(t)$ are on the $xy-\text{plane}$, and the only way for their cross product to not be $\vec{0}$ is if they are not `parallel`. Thus, if the cross product equals to $\vec{0}$, then $\vec{a}(t)$ is indeed `radial`:
+
+$\qquad\begin{aligned} \vec{a}(t)\times\vec{r}(t) &= \begin{bmatrix} -\omega^2 R\cos(\omega t) \\ -\omega^2 R\sin(\omega t) \\ 0 \end{bmatrix} \times \begin{bmatrix} R\cos(\omega t) \\ R\sin(\omega t) \\ h=0 \end{bmatrix} \\~\\ &= \begin{bmatrix} 0 \\ 0 \\ -\omega^2R^2\cos(\omega t)\sin(\omega)t+\omega^2R^2\cos(\omega t)\sin(\omega)t \end{bmatrix} \\~\\ &= \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix} \\~\\ &=\vec{0} \end{aligned}$
+
+Thus, the acceleration vector $\vec{a}(t)$ points towards the center of the circle.
+
+![](./Graphics/Part3Sec3.mp4){#id .class width=640px}
+
+\
+
+### IV. Centripetal Force
+
+Let the `centripetal force` be $\vec{F}_c(t)$ and its `magnitude` be $F_c$. Since `Newton's Second Law` dictates that $\vec{F}=m\vec{a}$, we have the following three scalar equations:
+
+$\qquad\begin{cases} F_c=ma \\ a=\omega^2R \\ \frac{2\pi R}{v}=\frac{2\pi}{\omega} \end{cases}$
+
+To solve for $F_c$ in terms of $m$, $v$, and $R$, we can do some simple algebra:
+
+$\qquad\begin{aligned} &\frac{2\pi R}{v}=\frac{2\pi}{\omega} \\~\\ &\therefore \frac{R}{v}=\frac{1}{\omega} \\~\\ &\therefore \frac{v}{R}=\omega \end{aligned}$
+
+Now `substitute` $\omega$ in `Equation 2`:
+
+$\qquad\begin{cases} F_c=ma \\ a=(\frac{v}{R})^2R=\frac{v^2}{R} \\ \frac{v}{R}=\omega \end{cases}$
+
+Now we can `substitute` $a$ in `Equation 1`:
+
+$\qquad F_c=ma \therefore F_c=m\frac{v^2}{R}$
+
+\
+
+### V. Normal Force
+
+The force that the ground exhibits on the car is perpendicular to the track, and is called the `normal force`, denoted by $\vec{N}$ with `magnitude` $N$. As for `friction`, it is denoted by $\vec{f}$ with `magnitude` $f$. The relationship between friction and the normal force is approximated by this equation:
+
+$\qquad f=\mu N$
+
+$\mu$ is a constant called the `coefficient of friction`, and is dependent on the condition of the track and the car's tires.
+
+The force of `gravity` can be described by $mg$, where $g$ is the `gravitational acceleration` at the surface of the Earth, which is around $32.1740 \text{ft/s}^2$.
+
+These three forces can be drawn on Babić race car like so:
+
+![](./Graphics/Part3Sec5.png){#id .class width=640px}
+
+We can abstract these forces and take their `vertical components`:
+
+![](./Graphics/Part3Sec5II.mp4){#id .class width=640px}
+
+To be precise, using basic `trigonometry` and `vector projection` (proof can be found using `similar triangles`), we can find that:
+
+$\qquad \begin{cases} N_z=N\cos\theta \\ f_z=f\sin\theta \\ (mg)_z=mg \end{cases}$
+
+Since the race car's `vertical acceleration` (recall that the `z-component` of $\vec{a}(t)$ is always $0$), we know that all three of these vertical components of forces must be `sum` to $0$. Therefore, we can create an equation (noting that the direction of the component corresponds to their sign):
+
+$\qquad N_z-f_z-(mg)_z=0$
+
+With substitution, we can get:
+
+$\qquad N\cos\theta-f\sin\theta-mg=0$
+
+We can then rearrange to get:
+
+$\qquad N\cos\theta=f\sin\theta+mg$
+
+If we want to remove `friction` from the equation, then we can use the equation $f=\mu N$ to substitute:
+
+$\qquad\begin{aligned} &N\cos\theta=f\sin\theta+mg \\~\\ &\therefore N\cos\theta=\mu N \sin \theta + mg \\~\\ &\therefore N(\cos\theta - \mu\sin\theta)=mg \\~\\ &\therefore N=\frac{mg}{\cos\theta - \mu\sin\theta} \end{aligned}$
+
+\
+
+### VI. Centripetal Force Part 2
+
+Similar to what we just did, instead of summing the vertical components of the three forces, we can sum the `horizontal` components.
+
+![](./Graphics/Part3Sec6.mp4){#id .class width=640px}
+
+Again, using `trigonometry` and `vector projection`, we can find that:
+
+$\qquad \begin{cases} N_x=N\sin\theta \\ f_x=f\cos\theta \\ (mg)_x=0 \end{cases}$
+
+Because the magnitude of `centripetal force` $F_c$ is just the sum of all the `horizontal` components, we can list the following equation and derive:
+
+$\qquad\begin{aligned} &F_c=N_x+f_x+(mg)_x &\therefore F_c=N\sin\theta+f\cos\theta\end{aligned}$
+
+But wait! We already have expressions for $N$ and $f$ in terms of $\mu$. Let's substitute that in:
+
+$\qquad\begin{aligned}&\begin{cases} F_c=N\sin\theta+f\cos\theta \\ f=\mu N \\ N=\frac{mg}{\cos\theta - \mu\sin\theta} \end{cases} \\~\\ &\therefore F_c=N\sin\theta+\mu N\cos\theta \\~\\ &\therefore F_c=N(\sin\theta+\mu\cos\theta) \\~\\ &\therefore F_c=\frac{mg}{\cos\theta-\mu\sin\theta}\cdot(\sin\theta+\mu\cos\theta) \\~\\ &\therefore F_c=\frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot mg \end{aligned}$
+
+\
+
+### VII. Maximum Speed
+
+Now we have two equations for `centripetal force`:
+
+$\qquad\begin{cases} F_c=m\frac{v^2}{R} \\ F_c=\frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot mg \end{cases}$
+
+Since second equation dictates the `maximum` centripetal force the car can have, the first equation limits the maximum `speed` the car can have before flying off the track. We can substitute out $F_c$ to find this maximum speed $v_{\text{max}}$:
+
+$\qquad\begin{aligned} &m\frac{v^2}{R}=\frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot mg \\~\\ &\therefore v^2= \frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot gR \end{aligned}$
+
+Because the mass of the car $m$ is not in the equation for $v_{\text{max}}$, we can conclude that the `mass` of the car actually `does not` affect the `maximum speed` it can go through a turn with.
+
+\
+
+### VIII. Turning Sharp
+
+Let's take a look back at the `Bristol Motor Speedway`. The inside track of Turn 1 has a `radius` of $211\text{ft}$ and a `bank angle` of $24^{\circ}$. If we assume `dry` conditions so that the coefficient of `friction` $\mu=0.98$, we can calculate the `maximum speed` Babić's race car can turn at:
+
+$\qquad\begin{aligned} v_{\text{max}}^2 &= \frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot gR \\~\\ &= \frac{\sin24^{\circ}+0.98\cos24^{\circ}}{\cos24^{\circ}-0.98\sin24^{\circ}}\cdot 32\cdot211 \\~\\ &= 17072.1230 \end{aligned} \\~\\ \qquad \therefore v_{\text{max}}=\sqrt{17072.1230}=130.6603  \; (\text{ft/s})$
+
+But this is in `feet per second`. Let's convert this to `miles per hour`. Doing so, we can conclude that in dry conditions, that maximum speed for a sharp turn is $89.0866\text{mph}$.
+
+\
+
+### IV. Turning Wide
+
+In contrast, the outside track of Turn 1 has a `radius` of $251\text{ft}$ and a `bank angle` of $28^{\circ}$. If we still assume `dry` conditions, we can calculate the `maximum speed` Babić's race car can turn at:
+
+$\qquad\begin{aligned} v_{\text{max}}^2 &= \frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot gR \\~\\ &= \frac{\sin28^{\circ}+0.98\cos28^{\circ}}{\cos28^{\circ}-0.98\sin28^{\circ}}\cdot 32\cdot251 \\~\\ &= 25352.7302 \end{aligned} \\~\\ \qquad \therefore v_{\text{max}}=\sqrt{25352.7302}=159.2254  \; (\text{ft/s})$
+
+Converting this to `miles per hour`, we get that in dry conditions, that maximum speed for a wide turn is $108.5628\text{mph}$.
+
+\
+
+### X. Wet Turns
+
+Back on the inside track of Turn 1, we're now facing `wet` conditions so that the coefficient of `friction` is now as low as $\mu=0.1$. Now, we calculate that the `maximum speed` Babić's race car can turn at:
+
+$\qquad\begin{aligned} v_{\text{max}}^2 &= \frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot gR \\~\\ &= \frac{\sin24^{\circ}+0.1\cos24^{\circ}}{\cos24^{\circ}-0.1\sin24^{\circ}}\cdot 32\cdot211 \\~\\ &= 3852.9275 \end{aligned} \\~\\ \qquad \therefore v_{\text{max}}=\sqrt{3852.9275}=62.0720  \; (\text{ft/s})$
+
+Convert this to `miles per hour`, we can conclude that in wet conditions, that maximum speed for a sharp turn is $42.3218\text{mph}$.
+
+\
+
+### XI. Coefficient of Friction
+
+Now let's suppose that Babić's race car is going around Turn 1 at $105\text{mph}$ ($154\text{ft/s}$) on the `outside` track. We can then estimate her car's tires' `coefficient of friction`:
+
+$\qquad\begin{aligned} &v_{\text{max}}^2 = \frac{\sin\theta+\mu\cos\theta}{\cos\theta-\mu\sin\theta}\cdot gR \\~\\ &\therefore 154^2=\frac{\sin28^{\circ}+\mu\cos28^{\circ}}{\cos28^{\circ}-\mu\sin28^{\circ}}\cdot 32\cdot251 \\~\\ &\therefore 23716=\frac{0.4695+0.8829\mu}{0.8829-0.4695\mu}\cdot 8032 \\~\\ &\therefore \mu=\frac{17167.8324}{18226.1148}=0.9419  \end{aligned}$
+
+Thus, we can conclude that Babić's car's tires have a `coefficient of friction` of $\mu=0.9419$.
+
+\
+
+## Bibliography
+
+* “A History of the 24 Hours of Le Mans Race.” 24 Hours of Le Mans - Official Website, Automobile Club de l'Ouest (ACO), https://www.24h-lemans.com/.
+
+* “History of the Automobile and Motor Racing.” Formula 1 - The Official Home of Formula 1 Racing, Formula One World Championship Limited, https://www.formula1.com/.
+
+* “The Evolution of Car Racing and Its Most Iconic Tracks.” The Drive, Meredith Corporation, https://www.thedrive.com/.
+
+* “The Story Behind the World's Most Famous Racetracks.” Road & Track, Hearst Autos, https://www.roadandtrack.com/.
+
+* Wikipedia contributors. "Bristol Motor Speedway." Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia, 27 Oct. 2024.
+
+* Wikipedia contributors. "Walt Disney World Speedway." Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia, 22 May. 2024.
+
